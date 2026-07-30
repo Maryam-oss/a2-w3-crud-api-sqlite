@@ -2,9 +2,18 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-// Stage 0: Root route returning Hello World
+// Stage 1: Root endpoint returning API metadata as JSON
 app.get('/', (req, res) => {
-    res.send('Hello, server!');
+    res.json({
+        name: "Task API",
+        version: "1.0",
+        endpoints: ["/tasks"]
+    });
+});
+
+// Stage 1: Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: "ok" });
 });
 
 app.listen(PORT, () => {
