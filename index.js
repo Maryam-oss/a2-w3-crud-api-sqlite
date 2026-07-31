@@ -1,9 +1,15 @@
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./openapi.json');
+
 const app = express();
 const PORT = 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// Serve Swagger UI at /docs
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // In-memory task database
 let tasks = [
@@ -25,7 +31,7 @@ app.get('/health', (req, res) => {
     res.json({ status: "ok" });
 });
 
-// Stage 2: Read endpoints (GET all, GET single)
+// Stage 2: Read endpoints
 app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
@@ -41,7 +47,7 @@ app.get('/tasks/:id', (req, res) => {
     res.json(task);
 });
 
-// Stage 3: Create endpoint (POST)
+// Stage 3: Create endpoint
 app.post('/tasks', (req, res) => {
     const { title } = req.body;
 
@@ -61,7 +67,7 @@ app.post('/tasks', (req, res) => {
     res.status(201).json(newTask);
 });
 
-// Stage 4: Update endpoint (PUT /tasks/:id)
+// Stage 4: Update endpoint
 app.put('/tasks/:id', (req, res) => {
     const taskId = parseInt(req.params.id, 10);
     const taskIndex = tasks.findIndex(t => t.id === taskId);
@@ -72,12 +78,10 @@ app.put('/tasks/:id', (req, res) => {
 
     const { title, done } = req.body;
 
-    // Validate title if it was provided in the update request
     if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
         return res.status(400).json({ error: "Title cannot be empty" });
     }
 
-    // Update fields if provided
     if (title !== undefined) {
         tasks[taskIndex].title = title.trim();
     }
@@ -88,7 +92,7 @@ app.put('/tasks/:id', (req, res) => {
     res.json(tasks[taskIndex]);
 });
 
-// Stage 4: Delete endpoint (DELETE /tasks/:id)
+// Stage 4: Delete endpoint
 app.delete('/tasks/:id', (req, res) => {
     const taskId = parseInt(req.params.id, 10);
     const taskIndex = tasks.findIndex(t => t.id === taskId);
@@ -97,10 +101,7 @@ app.delete('/tasks/:id', (req, res) => {
         return res.status(404).json({ error: `Task ${taskId} not found` });
     }
 
-    // Remove item from array
     tasks.splice(taskIndex, 1);
-
-    // 204 No Content for successful deletion
     res.status(204).send();
 });
 
