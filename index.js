@@ -2,17 +2,17 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-// Middleware to parse incoming JSON request bodies
+// Middleware to parse JSON bodies
 app.use(express.json());
 
-// In-memory task store
+// In-memory task database
 let tasks = [
     { id: 1, title: 'Learn HTTP CRUD', done: true },
     { id: 2, title: 'Build Express routes', done: false },
     { id: 3, title: 'Test endpoints with curl', done: false }
 ];
 
-// Stage 1 endpoints
+// Stage 1: Meta & Health
 app.get('/', (req, res) => {
     res.json({
         name: "Task API",
@@ -25,7 +25,7 @@ app.get('/health', (req, res) => {
     res.json({ status: "ok" });
 });
 
-// Stage 2 endpoints
+// Stage 2: Read endpoints (GET all, GET single)
 app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
@@ -41,16 +41,14 @@ app.get('/tasks/:id', (req, res) => {
     res.json(task);
 });
 
-// Stage 3: POST /tasks - Create a new task with validation
+// Stage 3: Create endpoint (POST)
 app.post('/tasks', (req, res) => {
     const { title } = req.body;
 
-    // Validation: check if title exists and is not just empty whitespace
     if (!title || typeof title !== 'string' || title.trim() === '') {
         return res.status(400).json({ error: "Title is required and cannot be empty" });
     }
 
-    // Generate a new ID (highest existing ID + 1)
     const nextId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
 
     const newTask = {
@@ -61,6 +59,49 @@ app.post('/tasks', (req, res) => {
 
     tasks.push(newTask);
     res.status(201).json(newTask);
+});
+
+// Stage 4: Update endpoint (PUT /tasks/:id)
+app.put('/tasks/:id', (req, res) => {
+    const taskId = parseInt(req.params.id, 10);
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+
+    if (taskIndex === -1) {
+        return res.status(404).json({ error: `Task ${taskId} not found` });
+    }
+
+    const { title, done } = req.body;
+
+    // Validate title if it was provided in the update request
+    if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
+        return res.status(400).json({ error: "Title cannot be empty" });
+    }
+
+    // Update fields if provided
+    if (title !== undefined) {
+        tasks[taskIndex].title = title.trim();
+    }
+    if (done !== undefined) {
+        tasks[taskIndex].done = Boolean(done);
+    }
+
+    res.json(tasks[taskIndex]);
+});
+
+// Stage 4: Delete endpoint (DELETE /tasks/:id)
+app.delete('/tasks/:id', (req, res) => {
+    const taskId = parseInt(req.params.id, 10);
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+
+    if (taskIndex === -1) {
+        return res.status(404).json({ error: `Task ${taskId} not found` });
+    }
+
+    // Remove item from array
+    tasks.splice(taskIndex, 1);
+
+    // 204 No Content for successful deletion
+    res.status(204).send();
 });
 
 app.listen(PORT, () => {
