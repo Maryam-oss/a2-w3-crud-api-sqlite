@@ -2,7 +2,10 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-// Stage 2: In-memory task store pre-filled with 3 sample tasks
+// Middleware to parse incoming JSON request bodies
+app.use(express.json());
+
+// In-memory task store
 let tasks = [
     { id: 1, title: 'Learn HTTP CRUD', done: true },
     { id: 2, title: 'Build Express routes', done: false },
@@ -22,12 +25,11 @@ app.get('/health', (req, res) => {
     res.json({ status: "ok" });
 });
 
-// Stage 2: GET /tasks - Return all tasks
+// Stage 2 endpoints
 app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
 
-// Stage 2: GET /tasks/:id - Return a single task by ID
 app.get('/tasks/:id', (req, res) => {
     const taskId = parseInt(req.params.id, 10);
     const task = tasks.find(t => t.id === taskId);
@@ -37,6 +39,28 @@ app.get('/tasks/:id', (req, res) => {
     }
 
     res.json(task);
+});
+
+// Stage 3: POST /tasks - Create a new task with validation
+app.post('/tasks', (req, res) => {
+    const { title } = req.body;
+
+    // Validation: check if title exists and is not just empty whitespace
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+        return res.status(400).json({ error: "Title is required and cannot be empty" });
+    }
+
+    // Generate a new ID (highest existing ID + 1)
+    const nextId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+
+    const newTask = {
+        id: nextId,
+        title: title.trim(),
+        done: false
+    };
+
+    tasks.push(newTask);
+    res.status(201).json(newTask);
 });
 
 app.listen(PORT, () => {
