@@ -37,38 +37,41 @@ This API manages an in-memory task collection using standard HTTP methods and pr
    cd a1-w2-crud-api
 
 
-1. Install dependencies
+2.  **Install dependencies**
+    ```bash
     npm install
 
-2. Start the server:
+3. **Start the server:**
+   ```bash
     node index.js
-    The API will start listening on http://localhost:3000
 
+  The API will start listening on http://localhost:3000
+   
 
-Sample Request & Response
-Creating a Task (POST /tasks)
-Command:
-curl -i -X POST http://localhost:3000/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Buy milk"}'
+### Sample Request & Response
+### Creating a Task (POST /tasks)
+**Command:**
+   ```bash
+      curl -i -X POST http://localhost:3000/tasks \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Buy milk"}'
 
-Output:
-HTTP/1.1 201 Created
-X-Powered-By: Express
-Content-Type: application/json; charset=utf-8
-Content-Length: 42
-Date: Sat, 01 Aug 2026 10:00:00 GMT
-Connection: keep-alive
+**Output:**
+    ```bash
+       HTTP/1.1 201 Created
+   X-Powered-By: Express
+   Content-Type: application/json; charset=utf-8
+   Content-Length: 42
+   Date: Sat, 01 Aug 2026 10:00:00 GMT
+   Connection: keep-alive
+   
+   {
+     "id": 4,
+     "title": "Buy milk",
+     "done": false
+   }
 
-{
-  "id": 4,
-  "title": "Buy milk",
-  "done": false
-}
-
-
-Interactive API Documentation
+### Interactive AI documentation
 Interactive Swagger UI documentation is available directly through the browser while the server is active[cite: 1]:
-
-http://localhost:3000/docs
+   http://localhost:3000/docs
 
