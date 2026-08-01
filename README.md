@@ -42,7 +42,7 @@ This API manages an in-memory task collection using standard HTTP methods and pr
 
 2. Start the server:
     node index.js
-    The API will start listening on http://localhost:3000[cite: 1].
+    The API will start listening on http://localhost:3000
 
 
 Sample Request & Response
@@ -70,6 +70,5 @@ Connection: keep-alive
 Interactive API Documentation
 Interactive Swagger UI documentation is available directly through the browser while the server is active[cite: 1]:
 
-👉 http://localhost:3000/docs
+http://localhost:3000/docs
 
-[cite: 1]
