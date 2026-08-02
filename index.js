@@ -90,20 +90,22 @@ app.get('/tasks/:id', (req, res) => {
 app.post('/tasks', (req, res) => {
     const { title } = req.body;
 
+    // Validation: ensure title exists and is a non-empty string
     if (!title || typeof title !== 'string' || title.trim() === '') {
-        return res.status(400).json({ error: "Title is required and cannot be empty" });
+        return res.status(400).json({ error: "Title is required" });
     }
 
-    const nextId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+    // Insert into SQLite using parameterized query
+    const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
+    const result = insert.run(title.trim(), 0); // done defaults to 0 (false)
 
-    const newTask = {
-        id: nextId,
-        title: title.trim(),
-        done: false
-    };
+    // Retrieve the inserted task using the auto-generated ID
+    const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
 
-    tasks.push(newTask);
-    res.status(201).json(newTask);
+    res.status(201).json({
+        ...newTask,
+        done: Boolean(newTask.done)
+    });
 });
 
 // Stage 4: Update endpoint
