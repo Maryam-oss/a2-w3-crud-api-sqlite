@@ -110,42 +110,50 @@ app.post('/tasks', (req, res) => {
 
 // Stage 4: Update endpoint
 app.put('/tasks/:id', (req, res) => {
-    const taskId = parseInt(req.params.id, 10);
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
-
-    if (taskIndex === -1) {
-        return res.status(404).json({ error: `Task ${taskId} not found` });
-    }
-
+    const { id } = req.params;
     const { title, done } = req.body;
 
-    if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
-        return res.status(400).json({ error: "Title cannot be empty" });
+    // 1. Check if the task exists
+    const existingTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+    if (!existingTask) {
+        return res.status(404).json({ error: "Task not found" });
     }
 
-    if (title !== undefined) {
-        tasks[taskIndex].title = title.trim();
-    }
-    if (done !== undefined) {
-        tasks[taskIndex].done = Boolean(done);
+    // 2. Validate input
+    if (!title || typeof title !== 'string' || title.trim() === '' || typeof done !== 'boolean') {
+        return res.status(400).json({ error: "Invalid title or done status" });
     }
 
-    res.json(tasks[taskIndex]);
+    // 3. Run UPDATE query
+    const update = db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?');
+    update.run(title.trim(), done ? 1 : 0, id);
+
+    // 4. Fetch and return updated task
+    const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+    res.status(200).json({
+        ...updatedTask,
+        done: Boolean(updatedTask.done)
+    });
 });
 
 // Stage 4: Delete endpoint
+// DELETE a task by ID
 app.delete('/tasks/:id', (req, res) => {
-    const taskId = parseInt(req.params.id, 10);
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    const { id } = req.params;
 
-    if (taskIndex === -1) {
-        return res.status(404).json({ error: `Task ${taskId} not found` });
+    // 1. Check if the task exists
+    const existingTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+    if (!existingTask) {
+        return res.status(404).json({ error: "Task not found" });
     }
 
-    tasks.splice(taskIndex, 1);
+    // 2. Run DELETE query
+    const del = db.prepare('DELETE FROM tasks WHERE id = ?');
+    del.run(id);
+
+    // 3. Return 204 No Content
     res.status(204).send();
 });
-
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
