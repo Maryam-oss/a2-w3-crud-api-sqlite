@@ -56,21 +56,36 @@ app.get('/health', (req, res) => {
 });
 
 // Stage 2: Read endpoints
+// 1. Get ALL tasks from database
 app.get('/tasks', (req, res) => {
-    res.json(tasks);
+    // .all() executes the SELECT query and returns an array of all matching rows
+    const tasks = db.prepare('SELECT * FROM tasks').all();
+
+    // Format done column back to boolean (0 -> false, 1 -> true)
+    const formattedTasks = tasks.map(task => ({
+        ...task,
+        done: Boolean(task.done)
+    }));
+
+    res.status(200).json(formattedTasks);
 });
 
+// 2. Get a SINGLE task by ID from database
 app.get('/tasks/:id', (req, res) => {
-    const taskId = parseInt(req.params.id, 10);
-    const task = tasks.find(t => t.id === taskId);
+    const { id } = req.params;
+
+    // .get(id) safely passes 'id' into the '?' placeholder
+    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 
     if (!task) {
-        return res.status(404).json({ error: `Task ${taskId} not found` });
+        return res.status(404).json({ error: "Task not found" });
     }
 
-    res.json(task);
+    res.status(200).json({
+        ...task,
+        done: Boolean(task.done)
+    });
 });
-
 // Stage 3: Create endpoint
 app.post('/tasks', (req, res) => {
     const { title } = req.body;
