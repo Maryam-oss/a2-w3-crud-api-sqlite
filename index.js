@@ -1,6 +1,7 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./openapi.json');
+const Database = require('better-sqlite3');
 
 const app = express();
 const PORT = 3000;
@@ -8,15 +9,38 @@ const PORT = 3000;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// 1. Connects to (or automatically creates) tasks.db
+const db = new Database('tasks.db');
+
+// 2. Create the tasks table if it doesn't exist
+db.exec(`
+  CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    done INTEGER DEFAULT 0
+  )
+`);
+
+// 3. Check if table is empty to prevent duplicate seeds on server restart
+const count = db.prepare('SELECT COUNT(*) AS count FROM tasks').get().count;
+
+if (count === 0) {
+    const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
+    insert.run('Buy milk', 0);
+    insert.run('Walk the dog', 0);
+    insert.run('Complete W3 assignment', 0);
+    console.log('Seeded 3 initial tasks into tasks.db');
+}
+
 // Serve Swagger UI at /docs
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // In-memory task database
-let tasks = [
-    { id: 1, title: 'Learn HTTP CRUD', done: true },
-    { id: 2, title: 'Build Express routes', done: false },
-    { id: 3, title: 'Test endpoints with curl', done: false }
-];
+//let tasks = [
+//{ id: 1, title: 'Learn HTTP CRUD', done: true },
+//{ id: 2, title: 'Build Express routes', done: false },
+//{ id: 3, title: 'Test endpoints with curl', done: false }
+//];
 
 // Stage 1: Meta & Health
 app.get('/', (req, res) => {
