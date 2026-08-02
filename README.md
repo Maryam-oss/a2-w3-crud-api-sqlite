@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Persistent Task Manager API (SQLite)
 
 A RESTful CRUD API for managing tasks, built with **Node.js**, **Express**, and **SQLite** (`better-sqlite3`).
@@ -135,4 +135,4 @@ Connection: keep-alive
 Interactive Swagger UI documentation is available directly through the browser while the server is active:
  
 **http://localhost:3000/docs**
->>>>>>> b3411c283576c45f7a191127b4e5d3318d2d6492
+
